@@ -2,7 +2,7 @@ package br.edu.ifg.enus;
 
 
 public enum OcorrenciaDoVoo {
-	ATERRISANDO("aterrissando"),
+	ATERRISSANDO("aterrissando"),
 	DECOLANDO("decolando");
 	
 	private String ocorrencia;

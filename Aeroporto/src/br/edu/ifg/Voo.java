@@ -1,12 +1,17 @@
 package br.edu.ifg;
 
 import br.edu.ifg.enus.*;
+import br.edu.ifg.interfaces.*;
 
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.GregorianCalendar;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Scanner;
 
-public class Voo {
+public class Voo implements IVoo {
 	private String empresaDoVoo;
 	private String numeroDoVoo;
 	private GregorianCalendar horario;
@@ -15,33 +20,30 @@ public class Voo {
 	private int quantAeromocas;
 	private Piloto piloto;
 	private CoPiloto coPiloto;
-	private Aeromoca aeromocas;
-	private Passageiro passageiro;
+	private ArrayList<Aeromoca> aeromocas;
+	private Map<Integer,Passageiro> passageiros;
 	private OcorrenciaDoVoo ocorrenciaDoVoo;
 	private Scanner sc = new Scanner(System.in);
 	
 	public Voo(String empresaDoVoo,
-				String numeroDoVoo,
-				Piloto piloto,
-				CoPiloto coPiloto,
-				Aeromoca aeromocas,
-				Passageiro passageiro,
-				String ocorrenciaDoVoo) {
+				String ocorrenciaDoVoo,
+				Map<String,Aviao> avioes) {
 		
 		this.empresaDoVoo = empresaDoVoo;
-		this.numeroDoVoo = numeroDoVoo;
-		this.piloto = piloto;
-		this.coPiloto = coPiloto;
-		this.aeromocas = aeromocas;
-		this.passageiro = passageiro;
 		this.ocorrenciaDoVoo = OcorrenciaDoVoo.valueOf(ocorrenciaDoVoo);
 		this.definirNumeroDoVoo();
 		this.definirQuantPassageiros();
 		this.definirQuantAeromocas();
+		this.piloto = this.criarPiloto();
+		this.coPiloto = this.criarCoPiloto();
+		this.aeromocas = this.criarAeromocas();
 		this.definirHorario();
+		this.aviao = this.definirAviao(avioes);
+		this.criarPassageiros();
 		
 	}
 	
+	@Override
 	public void definirNumeroDoVoo() {
 		String numeroDoVoo;
 		
@@ -51,26 +53,30 @@ public class Voo {
 		this.setNumeroDoVoo(numeroDoVoo);
 	}
 	
+	@Override
 	public void definirQuantPassageiros() {
-		int passageiros;
+		int quantPassageiros;
 		
 		System.out.println("Quantos passageiros o voo "
 							+this.getNumeroDoVoo()+" vai ter:");
-		passageiros = sc.nextInt();
+		quantPassageiros = sc.nextInt();
 		
-		this.setQuantPassageiros(passageiros);
+		this.setQuantPassageiros(quantPassageiros);
 	}
 	
+	@Override
 	public void definirQuantAeromocas() {
 		int quantAeromocas;
 		
 		System.out.println("Quantas aeromocas o voo "
 							+this.getNumeroDoVoo()+" vai ter:");
 		quantAeromocas = sc.nextInt();
+		clearBuffer();
 		
 		this.setQuantAeromocas(quantAeromocas);
 	}
 	
+	@Override
 	public void definirHorario() {
 		GregorianCalendar horario;
 		int dia, mes, ano, hora, minuto;
@@ -80,28 +86,158 @@ public class Voo {
 		
 		System.out.println("Digite o mes em numero:");
 		mes = sc.nextInt();
+		this.clearBuffer();
 		mes = mes -1;
 		
 		System.out.println("Digite o ano:");
 		ano = sc.nextInt();
+		this.clearBuffer();
 		
 		System.out.println("Digite a hora:");
 		hora = sc.nextInt(); 
+		this.clearBuffer();
 		
 		System.out.println("Digite o minuto");
 		minuto = sc.nextInt();
-		horario = new GregorianCalendar(ano, mes, dia, hora, minuto);
+		this.clearBuffer();
 		
+		horario = new GregorianCalendar(ano, mes, dia, hora, minuto);
+
 		this.setHorario(horario);
 	}
-
-	public String getEmpresaDoAviao() {
-		return empresaDoVoo;
+	
+	@Override
+	public Aviao definirAviao(Map<String,Aviao> avioes) {	
+		for(String key : avioes.keySet()) {
+			int quantMinimaPassageiroPraViajem;
+			quantMinimaPassageiroPraViajem = (int) (avioes.get(key).getQuantLugares()*0.2);
+			
+			if(quantMinimaPassageiroPraViajem <= this.getQuantPassageiros()) {
+				return avioes.get(key);
+			}
+		}
+		
+		System.out.println("Quantidade de passageiros abaixo do minimo"
+							+"\nSem avioes disponiveis");
+		System.out.println("Crie um novo aviao:");
+		
+		Aviao aviao = new Aviao();
+		return aviao;
 	}
-
-	public void setEmpresaDoAviao(String empresaDoAviao) {
-		this.empresaDoVoo = empresaDoAviao;
+	
+	@Override
+	public void criarPassageiros() {
+		int quantPassageiro = this.getQuantPassageiros();
+		int i = 1;
+		
+		
+		String numeroDoVoo = this.getNumeroDoVoo();
+		while(i<= quantPassageiro) {
+			String nome;
+			String cpf;
+			int numeroDaPoltrona;
+			
+			System.out.println("Digite o nome do passageiro");
+			nome = sc.nextLine();
+			
+			System.out.println("Informe o CPF");
+			cpf = sc.nextLine();
+			
+			Passageiro passageiro = new Passageiro(nome, cpf, numeroDoVoo);
+			numeroDaPoltrona = passageiro.definirNumeroDaPoltrona(this.getAviao().getQuantLugares(),this.getPassageiros());
+			System.out.println(passageiro.getNome());
+			
+			if(this.getPassageiros() == null) {
+				Map<Integer,Passageiro> passageiros = new HashMap<>();
+				passageiros.put(numeroDaPoltrona, passageiro);
+				this.setPassageiros(passageiros);
+			}else {
+				Map<Integer,Passageiro> passageiros = this.getPassageiros();
+				passageiros.put(numeroDaPoltrona, passageiro);
+				this.setPassageiros(passageiros);
+			}
+			
+			i++;
+			
+		}
 	}
+	
+	@Override
+	public Piloto criarPiloto() {
+		String nome; 
+		String cpf;
+		String numeroDoVoo;
+		String licenca;
+		
+		numeroDoVoo = this.getNumeroDoVoo();
+		licenca = "Piloto";
+
+		System.out.println("Digite o nome do piloto");
+		nome = sc.nextLine();
+		
+		System.out.println("Informe o CPF do Piloto");
+		cpf = sc.nextLine();
+		
+		Piloto piloto = new Piloto(nome,cpf,numeroDoVoo,licenca);
+		
+		return piloto;
+	}
+	
+	@Override
+	public CoPiloto criarCoPiloto() {
+		String nome; 
+		String cpf;
+		String numeroDoVoo;
+		String licenca;
+		
+		numeroDoVoo = this.getNumeroDoVoo();
+		licenca = "Co-Piloto";
+
+		System.out.println("Digite o nome do Co-Piloto");
+		nome = sc.nextLine();
+		
+		System.out.println("Informe o CPF do Co-Piloto");
+		cpf = sc.nextLine();
+		
+		CoPiloto coPiloto = new CoPiloto(nome,cpf,numeroDoVoo,licenca);
+		
+		return coPiloto;
+	}
+	
+	@Override
+	public ArrayList<Aeromoca> criarAeromocas() {
+		String nome; 
+		String cpf;
+		String numeroDoVoo;
+		String formacao;
+		ArrayList<Aeromoca> aeromocas = new ArrayList<Aeromoca>();
+		int quantAeromocas = this.getQuantAeromocas();
+		int i = 1;
+		
+		numeroDoVoo = this.getNumeroDoVoo();
+		formacao = "Aeromoca";
+		
+		while(i<=quantAeromocas) {
+			System.out.println("Digite o nome da Aeromoca");
+			nome = sc.nextLine();
+			
+			System.out.println("Informe o CPF da Aeromoca");
+			cpf = sc.nextLine();
+			
+			Aeromoca aeromoca = new Aeromoca(nome, cpf, numeroDoVoo, formacao);
+			aeromocas.add(aeromoca);
+			
+			i++;
+		}
+		
+		return aeromocas;
+	}
+	
+	private void clearBuffer() {
+        if (sc.hasNextLine()) {
+            sc.nextLine();
+        }
+    }
 
 	public String getNumeroDoVoo() {
 		return numeroDoVoo;
@@ -152,20 +288,28 @@ public class Voo {
 		this.coPiloto = coPiloto;
 	}
 
-	public Aeromoca getAeromocas() {
+	public ArrayList<Aeromoca> getAeromocas() {
 		return aeromocas;
 	}
 
-	public void setAeromocas(Aeromoca aeromocas) {
+	public void setAeromocas(ArrayList<Aeromoca> aeromocas) {
 		this.aeromocas = aeromocas;
 	}
-
-	public Passageiro getPassageiro() {
-		return passageiro;
+	
+	public String getEmpresaDoVoo() {
+		return empresaDoVoo;
 	}
 
-	public void setPassageiro(Passageiro passageiro) {
-		this.passageiro = passageiro;
+	public void setEmpresaDoVoo(String empresaDoVoo) {
+		this.empresaDoVoo = empresaDoVoo;
+	}
+
+	public Map<Integer, Passageiro> getPassageiros() {
+		return passageiros;
+	}
+
+	public void setPassageiros(Map<Integer, Passageiro> passageiros) {
+		this.passageiros = passageiros;
 	}
 
 	public GregorianCalendar getHorario() {
@@ -174,5 +318,27 @@ public class Voo {
 
 	public void setHorario(GregorianCalendar horario) {
 		this.horario = horario;
-	}		
+	}
+
+	public String getOcorrenciaDoVoo() {
+		String ocorrenciaDoVoo = "";
+		
+		switch (this.ocorrenciaDoVoo) {
+		case ATERRISSANDO:
+			ocorrenciaDoVoo = "aterrissando";
+			break;
+			
+		case DECOLANDO:
+			ocorrenciaDoVoo = "decolando";
+			break;
+		}
+		return ocorrenciaDoVoo;
+	}
+	
+
+	public void setOcorrenciaDoVoo(OcorrenciaDoVoo ocorrenciaDoVoo) {
+		this.ocorrenciaDoVoo = ocorrenciaDoVoo;
+	}	
+	
+	
 }
