@@ -81,7 +81,7 @@ public class Voo implements IVoo {
 		GregorianCalendar horario;
 		int dia, mes, ano, hora, minuto;
 		
-		System.out.println("Digite o dia da saida:");
+		System.out.println("Digite o dia:");
 		dia = sc.nextInt();
 		
 		System.out.println("Digite o mes em numero:");
@@ -112,12 +112,12 @@ public class Voo implements IVoo {
 			int quantMinimaPassageiroPraViajem;
 			quantMinimaPassageiroPraViajem = (int) (avioes.get(key).getQuantLugares()*0.2);
 			
-			if(quantMinimaPassageiroPraViajem <= this.getQuantPassageiros()) {
+			if(quantMinimaPassageiroPraViajem <= this.getQuantPassageiros() && this.getQuantPassageiros() <= avioes.get(key).getQuantLugares()) {
 				return avioes.get(key);
 			}
 		}
 		
-		System.out.println("Quantidade de passageiros abaixo do minimo"
+		System.out.println("Quantidade de passageiros abaixo do minimo ou a cima da capacidade total"
 							+"\nSem avioes disponiveis");
 		System.out.println("Crie um novo aviao:");
 		
@@ -145,7 +145,6 @@ public class Voo implements IVoo {
 			
 			Passageiro passageiro = new Passageiro(nome, cpf, numeroDoVoo);
 			numeroDaPoltrona = passageiro.definirNumeroDaPoltrona(this.getAviao().getQuantLugares(),this.getPassageiros());
-			System.out.println(passageiro.getNome());
 			
 			if(this.getPassageiros() == null) {
 				Map<Integer,Passageiro> passageiros = new HashMap<>();

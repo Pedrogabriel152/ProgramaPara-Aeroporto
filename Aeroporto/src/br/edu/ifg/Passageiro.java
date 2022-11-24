@@ -31,8 +31,6 @@ public class Passageiro extends Pessoa {
 			}
 		}
 		
-		System.out.println(this.getNumeroDaPoltrona());
-		
 		return this.getNumeroDaPoltrona();
 	}
 
